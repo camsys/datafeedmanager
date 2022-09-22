@@ -1,2 +1,5 @@
-package com.camsys.datafeedmanager.model.entities;public enum RealtimeFeedType {
+package com.camsys.datafeedmanager.model;
+
+public enum RealtimeFeedType {
+    GTFSRT
 }

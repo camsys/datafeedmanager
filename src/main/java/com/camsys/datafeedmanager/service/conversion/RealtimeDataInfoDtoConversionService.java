@@ -1,31 +1,38 @@
 package com.camsys.datafeedmanager.service.conversion;
 
-import com.camsys.datafeedmanager.dto.FeedConfigurationDto;
-import com.camsys.datafeedmanager.dto.FeedConfigurationListDto;
 import com.camsys.datafeedmanager.dto.FeedInfoDto;
-import com.camsys.datafeedmanager.model.entities.FeedConfiguration;
+import com.camsys.datafeedmanager.dto.RealtimeDataInfoDto;
+import com.camsys.datafeedmanager.model.RealtimeFeedType;
 import com.camsys.datafeedmanager.model.entities.FeedInfo;
+import com.camsys.datafeedmanager.model.entities.RealtimeDataInfo;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.text.ParseException;
-
 @Component
-public class FeedInfoDtoConversionService {
-
-    @Autowired
-    private ModelMapper modelMapper;
+public class RealtimeDataInfoDtoConversionService {
 
 
-    public FeedInfoDto convertToDto(FeedInfo feedInfo) {
-        FeedInfoDto feedInfoDto = modelMapper.map(feedInfo, FeedInfoDto.class);
-        return feedInfoDto;
+    public RealtimeDataInfoDto convertToDto(RealtimeDataInfo realtimeDataInfo) {
+        RealtimeDataInfoDto realtimeDataInfoDto = RealtimeDataInfoDto.builder()
+                .id(realtimeDataInfo.getId())
+                .name(realtimeDataInfo.getName())
+                .description(realtimeDataInfo.getDescription())
+                .feedURI(realtimeDataInfo.getFeedURI())
+                .feedType(realtimeDataInfo.getFeedType().toString())
+                .build();
+        return realtimeDataInfoDto;
     }
 
-    public FeedInfo convertToEntity(FeedInfoDto feedInfoDto) {
-        FeedInfo feedInfo = modelMapper.map(feedInfoDto, FeedInfo.class);
-        return feedInfo;
+    public RealtimeDataInfo convertToEntity(RealtimeDataInfoDto realtimeDataInfoDto, FeedInfo feedInfo) {
+        RealtimeDataInfo realtimeDataInfo = new RealtimeDataInfo();
+        realtimeDataInfo.setId(realtimeDataInfoDto.getId());
+        realtimeDataInfo.setName(realtimeDataInfoDto.getName());
+        realtimeDataInfo.setDescription(realtimeDataInfoDto.getDescription());
+        realtimeDataInfo.setFeedURI(realtimeDataInfoDto.getFeedURI());
+        realtimeDataInfo.setFeedType(RealtimeFeedType.valueOf(realtimeDataInfoDto.getFeedType()));
+        realtimeDataInfo.setFeedInfo(feedInfo);
+        return realtimeDataInfo;
     }
 
 }

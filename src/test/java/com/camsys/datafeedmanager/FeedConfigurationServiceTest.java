@@ -1,47 +1,59 @@
-package com.camsys.datafeedmanager.service;
+package com.camsys.datafeedmanager;
 
 import com.camsys.datafeedmanager.model.entities.FeedConfiguration;
 import com.camsys.datafeedmanager.model.entities.FeedInfo;
-import org.junit.Test;
+import com.camsys.datafeedmanager.service.FeedConfigurationService;
+import com.camsys.datafeedmanager.service.FeedInfoService;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 
+import static data.FeedConfigMockData.getFeedConfigurationSample;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@ActiveProfiles("test")
 public class FeedConfigurationServiceTest {
 
     @Autowired
     private FeedConfigurationService feedConfigurationService;
 
-    private FeedConfiguration getFeedConfigurationSample(){
-        FeedConfiguration feedConfiguration = new FeedConfiguration();
-        feedConfiguration.setFeedConfigName("configName");
-        feedConfiguration.setBackupDirectory("/backupDir");
-        feedConfiguration.setTargetDirectory("/targetDir");
-        return feedConfiguration;
-    }
+    @Autowired
+    private FeedInfoService feedInfoService;
+
+
 
     @Test
-    public void testFeedConfigurationCRUD() throws ParseException {
+    public void feedConfigurationCRUDTest() throws ParseException {
+        // Create Test
+        assertEquals(0, feedConfigurationService.getFeedConfigurations().size());
 
-        feedConfigurationService.saveFeedConfiguration(getFeedConfigurationSample());
+        Long savedFeedConfigurationId = feedConfigurationService.saveFeedConfiguration(getFeedConfigurationSample());
 
-        List<FeedConfiguration> feedConfigurations = feedConfigurationService.getFeedConfigurations();
+        assertNotNull(savedFeedConfigurationId);
 
-        assertEquals(1, feedConfigurations.size());
+        assertEquals(1, feedConfigurationService.getFeedConfigurations().size());
 
-        FeedConfiguration feedConfigurationResult = feedConfigurations.stream().findFirst().get();
+        // Read Test
+        FeedConfiguration feedConfigurationResult = feedConfigurationService.getFeedConfiguration(savedFeedConfigurationId);
 
-        FeedInfo feedInfoResult = feedConfigurationResult.getFeedInfo().stream().findFirst().get();
+        assertEquals("configName", feedConfigurationResult.getFeedConfigName());
 
-        assertEquals("Metro Transit", feedInfoResult.getFeedName());
+        assertEquals("/backupDir", feedConfigurationResult.getBackupDirectory());
 
-        feedInfoResult.setFeedName("Updated Metro Transit");
+        assertEquals("/targetDir", feedConfigurationResult.getTargetDirectory());
+
+        // Update Test
+        feedConfigurationResult.setFeedConfigName("Updated Feed Config Name");
 
         feedConfigurationService.saveFeedConfiguration(feedConfigurationResult);
 
@@ -49,9 +61,21 @@ public class FeedConfigurationServiceTest {
 
         FeedConfiguration updatedFeedConfigurationResult = updatedFeedConfigurations.stream().findFirst().get();
 
-        FeedInfo updatedFeedInfoResult = updatedFeedConfigurationResult.getFeedInfo().stream().findFirst().get();
+        assertEquals("Updated Feed Config Name", updatedFeedConfigurationResult.getFeedConfigName());
 
-        assertEquals("Updated Metro Transit", updatedFeedInfoResult.getFeedName());
+        // Delete Test
+        List<FeedInfo> feedInfo = feedInfoService.getFeedInfos();
 
+        assertEquals(1, feedInfo.size());
+
+        feedConfigurationService.deleteFeedConfiguration(updatedFeedConfigurationResult.getId());
+
+        List<FeedConfiguration> latestFeedConfigurations = feedConfigurationService.getFeedConfigurations();
+
+        assertEquals(0, latestFeedConfigurations.size());
+
+        List<FeedInfo> feedInfoPostDelete = feedInfoService.getFeedInfos();
+
+        assertEquals(0, feedInfoPostDelete.size());
     }
 }

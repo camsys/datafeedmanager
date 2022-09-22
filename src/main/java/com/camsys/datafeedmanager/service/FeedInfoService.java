@@ -1,9 +1,14 @@
 package com.camsys.datafeedmanager.service;
 
 import com.camsys.datafeedmanager.dto.FeedConfigurationDto;
+import com.camsys.datafeedmanager.dto.FeedConfigurationListDto;
+import com.camsys.datafeedmanager.dto.FeedInfoDto;
 import com.camsys.datafeedmanager.model.entities.FeedConfiguration;
 import com.camsys.datafeedmanager.model.entities.FeedInfo;
+import com.camsys.datafeedmanager.model.entities.RealtimeDataInfo;
+import com.camsys.datafeedmanager.model.entities.TransitDataInfo;
 import com.camsys.datafeedmanager.repository.FeedConfigurationRespository;
+import com.camsys.datafeedmanager.repository.FeedInfoRespository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,38 +18,43 @@ import java.text.ParseException;
 import java.util.List;
 
 @Service
-public class FeedConfigurationService {
+public class FeedInfoService {
     @Autowired
-    private FeedConfigurationRespository configurationRespository;
+    private FeedConfigurationRespository feedConfigurationRespository;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private FeedInfoRespository feedInfoRespository;
 
-    public List<FeedConfiguration> getFeedConfigurations(){
-        return configurationRespository.findAll();
+    public List<FeedInfo> getFeedInfos(){
+        return feedInfoRespository.findAll();
     }
 
-    public Long saveFeedConfiguration(FeedConfiguration feedConfiguration) throws ParseException {
-        FeedConfiguration savedFeedConfiguration = configurationRespository.save(feedConfiguration);
-        return savedFeedConfiguration.getId();
+    public FeedInfo getFeedInfo(Long id){
+        return feedInfoRespository.findById(id).orElseThrow();
     }
 
-    public void deleteFeedConfiguration(Long id){
-        configurationRespository.deleteById(id);
+    public Long saveFeedInfo(FeedInfo feedInfo)  {
+        FeedInfo savedFeedInfo = feedInfoRespository.save(feedInfo);
+        return savedFeedInfo.getId();
+    }
+
+    public void deleteFeedInfo(Long id){
+        FeedInfo feedInfo = feedInfoRespository.findById(id).orElseThrow();
+        FeedConfiguration feedConfiguration = feedInfo.getFeedConfiguration();
+        if(feedConfiguration != null){
+            feedConfiguration.getFeedInfo().remove(feedInfo);
+            feedConfigurationRespository.save(feedConfiguration);
+        }
     }
 
     @Transactional
-    public List<FeedInfo> getFeedInfo(FeedConfiguration feedConfiguration){
-        return feedConfiguration.getFeedInfo();
+    public List<RealtimeDataInfo> getRealtimeDataInfo(FeedInfo feedInfo){
+        return feedInfo.getRealtimeDataInfo();
     }
 
-    public FeedConfigurationDto convertToDto(FeedConfiguration feedConfiguration) {
-        FeedConfigurationDto feedConfigurationDto = modelMapper.map(feedConfiguration, FeedConfigurationDto.class);
-        return feedConfigurationDto;
+    @Transactional
+    public List<TransitDataInfo> getTransitDataInfo(FeedInfo feedInfo){
+        return feedInfo.getTransitDataInfo();
     }
 
-    public FeedConfiguration convertToEntity(FeedConfigurationDto feedConfigurationDto) throws ParseException {
-        FeedConfiguration feedConfiguration = modelMapper.map(feedConfigurationDto, FeedConfiguration.class);
-        return feedConfiguration;
-    }
 }

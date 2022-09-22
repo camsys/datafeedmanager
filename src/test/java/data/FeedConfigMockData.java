@@ -1,4 +1,4 @@
-package mockdata;
+package data;
 
 import com.camsys.datafeedmanager.model.RealtimeFeedType;
 import com.camsys.datafeedmanager.model.entities.FeedConfiguration;
@@ -55,4 +55,5 @@ public class FeedConfigMockData {
 
         return feedConfiguration;
     }
+
 }

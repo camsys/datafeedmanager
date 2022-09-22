@@ -1,72 +1,39 @@
 package com.camsys.datafeedmanager.controller;
 
-import com.camsys.datafeedmanager.dto.FeedConfigurationDto;
 import com.camsys.datafeedmanager.dto.FeedInfoDto;
-import com.camsys.datafeedmanager.model.entities.FeedConfiguration;
-import com.camsys.datafeedmanager.service.FeedConfigurationService;
-import com.camsys.datafeedmanager.service.conversion.FeedConfigurationDtoConversionService;
+import com.camsys.datafeedmanager.model.entities.FeedInfo;
+import com.camsys.datafeedmanager.service.FeedInfoService;
 import com.camsys.datafeedmanager.service.conversion.FeedInfoDtoConversionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.ParseException;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RestController
-@RequestMapping("/feed")
-public class FeedConfigurationController {
+@RequestMapping("/api/feed/feed-info")
+public class FeedInfoController {
 
     @Autowired
-    private FeedConfigurationService feedConfigurationService;
-
-    @Autowired
-    private FeedConfigurationDtoConversionService feedConfigDtoConversionService;
+    private FeedInfoService feedInfoService;
 
     @Autowired
     private FeedInfoDtoConversionService feedInfoDtoConversionService;
 
 
-    @GetMapping("/configurations/list")
-    List<FeedConfigurationDto> getFeedConfigurations() {
-        List<FeedConfiguration> feedConfigurations = feedConfigurationService.getFeedConfigurations();
-        return feedConfigurations.stream()
-                .map(feedConfigurationService::)
-                .collect(Collectors.toList());
+    @GetMapping("/{id}")
+    FeedInfoDto getFeedInfo(@PathVariable("id") long id) {
+        FeedInfo feedInfo =  feedInfoService.getFeedInfo(id);
+        return feedInfoDtoConversionService.convertToDto(feedInfo);
     }
 
-    @GetMapping("/configurations/{id}")
-    FeedConfigurationDto getFeedConfiguration(@PathVariable Long id) {
-        FeedConfiguration feedConfiguration =  feedConfigurationService.getFeedConfiguration(id);
-        return dtoConversionService.convertToDto(feedConfiguration);
+    @PostMapping("/save")
+    Long saveFeedInfo(@RequestBody FeedInfoDto feedInfoDto) {
+        FeedInfo feedInfo = feedInfoDtoConversionService.convertToEntity(feedInfoDto);
+        return feedInfoService.saveFeedInfo(feedInfo);
     }
 
-    @PostMapping("/configurations/save")
-    void saveFeedConfiguration(@RequestBody FeedConfigurationDto feedConfigurationDto) throws ParseException {
-        FeedConfiguration feedConfiguration = dtoConversionService.convertToEntity(feedConfigurationDto);
-        feedConfigurationService.saveFeedConfiguration(feedConfiguration);
-    }
-
-    @GetMapping("/configurations/delete/{id}")
-    void deleteFeedConfiguration(@PathVariable("id") long id) {
-        feedConfigurationService.deleteFeedConfiguration(id);
+    @GetMapping("/delete/{id}")
+    void deleteFeedInfo(@PathVariable("id") long id) {
+        feedInfoService.deleteFeedInfo(id);
     }
 
 
-    @GetMapping("/configurations/{configId}/feed-info/list")
-    List<FeedInfoDto> getFeedInfoList(@PathVariable("configId") long configId) {
-        FeedConfiguration feedConfiguration = feedConfigurationService.getFeedConfiguration(configId);
-        return feedConfiguration.getFeedInfo().stream()
-                .map(feedInfoDtoConversionService::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-    @GetMapping("/configurations/{configId}/feed-info/{id}")
-    FeedInfoDto getFeedInfo(@PathVariable("configId") long configId, @PathVariable("id") long id) {
-        FeedConfiguration feedConfiguration = feedConfigurationService.getFeedConfiguration(configId);
-        FeedInfoDto feedInfoDto =  feedConfigurationService.getFeedConfigurations();
-        return feedConfigurations.stream()
-                .map(dtoConversionService::convertToDto)
-                .collect(Collectors.toList());
-    }
 }

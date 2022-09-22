@@ -7,15 +7,10 @@ import java.util.List;
 
 @Getter
 @Setter
-public class FeedConfigurationDto {
+public class FeedConfigurationListDto {
 
     private Long id;
 
     private String feedConfigName;
 
-    private String targetDirectory;
-
-    private String backupDirectory;
-
-    private List<FeedInfoDto> feedInfo;
 }

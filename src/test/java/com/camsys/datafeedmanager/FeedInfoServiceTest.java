@@ -3,28 +3,27 @@ package com.camsys.datafeedmanager;
 import com.camsys.datafeedmanager.model.RealtimeFeedType;
 import com.camsys.datafeedmanager.model.entities.FeedConfiguration;
 import com.camsys.datafeedmanager.model.entities.FeedInfo;
-import com.camsys.datafeedmanager.model.entities.RealtimeDataInfo;
-import com.camsys.datafeedmanager.model.entities.TransitDataInfo;
 import com.camsys.datafeedmanager.service.FeedConfigurationService;
 import com.camsys.datafeedmanager.service.FeedInfoService;
-import org.junit.Ignore;
+import data.FeedInfoMockData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static data.FeedConfigMockData.getFeedConfigurationSample;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-public class FeedConfigurationServiceTest {
+@ActiveProfiles("test")
+public class FeedInfoServiceTest {
 
     @Autowired
     private FeedConfigurationService feedConfigurationService;
@@ -32,90 +31,82 @@ public class FeedConfigurationServiceTest {
     @Autowired
     private FeedInfoService feedInfoService;
 
-    public static FeedConfiguration getFeedConfigurationSample(){
-        FeedInfo feedInfo = new FeedInfo();
-        feedInfo.setAgency("Minneapolis Metro Transit");
-        feedInfo.setFeedName("Metro Transit");
-        feedInfo.setServiceName("Minnesota Buses");
-
-        RealtimeDataInfo realtimeDataInfoTripUpdates = new RealtimeDataInfo();
-        realtimeDataInfoTripUpdates.setName("MT TripUpdates Feed");
-        realtimeDataInfoTripUpdates.setFeedURI("https://svc.metrotransit.org/mtgtfs/tripupdates.pb");
-        realtimeDataInfoTripUpdates.setFeedType(RealtimeFeedType.GTFSRT);
-        realtimeDataInfoTripUpdates.setFeedInfo(feedInfo);
-
-        RealtimeDataInfo realtimeDataInfoVehiclePositions = new RealtimeDataInfo();
-        realtimeDataInfoVehiclePositions.setName("MT VehiclePositions Feed");
-        realtimeDataInfoVehiclePositions.setFeedURI("https://svc.metrotransit.org/mtgtfs/vehiclepositions.pb");
-        realtimeDataInfoVehiclePositions.setFeedType(RealtimeFeedType.GTFSRT);
-        realtimeDataInfoVehiclePositions.setFeedInfo(feedInfo);
-
-        List<RealtimeDataInfo> realtimeData = new ArrayList<>();
-        realtimeData.add(realtimeDataInfoTripUpdates);
-        realtimeData.add(realtimeDataInfoVehiclePositions);
-
-        TransitDataInfo transitDataInfo = new TransitDataInfo();
-        transitDataInfo.setName("MT TripUpdates Feed");
-        transitDataInfo.setSourceURI("https://svc.metrotransit.org/mtgtfs/tripupdates.pb");
-        transitDataInfo.setMerge(false);
-        transitDataInfo.setTargetName("mtgtfs.zip");
-        transitDataInfo.setFeedInfo(feedInfo);
-
-        List<TransitDataInfo> transitData = new ArrayList<>();
-        transitData.add(transitDataInfo);
-
-        feedInfo.setRealtimeDataInfo(realtimeData);
-        feedInfo.setTransitDataInfo(transitData);
-
-        FeedConfiguration feedConfiguration = new FeedConfiguration();
-        feedConfiguration.setFeedConfigName("configName");
-        feedConfiguration.setBackupDirectory("/backupDir");
-        feedConfiguration.setTargetDirectory("/targetDir");
-        feedConfiguration.addFeedInfo(feedInfo);
-
-        feedInfo.setFeedConfiguration(feedConfiguration);
-
-        return feedConfiguration;
-    }
 
     @Test
-    public void feedConfigurationCRUDTest() throws ParseException {
+    public void feedInfoCRUDTest() throws ParseException {
         // Create Test
+        assertEquals(0, feedInfoService.getFeedInfos().size());
+
         Long savedFeedConfigurationId = feedConfigurationService.saveFeedConfiguration(getFeedConfigurationSample());
 
         assertNotNull(savedFeedConfigurationId);
 
-        // Read Test
-        List<FeedConfiguration> feedConfigurations = feedConfigurationService.getFeedConfigurations();
+        assertEquals(1, feedInfoService.getFeedInfos().size());
 
-        assertEquals(1, feedConfigurations.size());
+        FeedConfiguration feedConfiguration = feedConfigurationService.getFeedConfiguration(savedFeedConfigurationId);
+
+        FeedInfo feedInfo = FeedInfoMockData.getFeedInfoSample();
+
+        feedInfo.setFeedConfiguration(feedConfiguration);
+
+        Long savedFeedInfoId = feedInfoService.saveFeedInfo(feedInfo);
+
+        assertNotNull(savedFeedInfoId);
+
+        assertEquals(2, feedInfoService.getFeedInfos().size());
+
+        // Read Test
+        FeedInfo feedInfoResult = feedInfoService.getFeedInfo(savedFeedInfoId);
+
+        assertNotNull(feedInfoResult);
+
+        assertEquals("Minneapolis Metro Transit 2", feedInfo.getAgency());
+
+        assertEquals("Metro Transit 2", feedInfo.getFeedName());
+
+        assertEquals("Minnesota Shuttles", feedInfo.getServiceName());
+
+        assertEquals(true, feedInfo.getEnabled());
+
+        assertEquals(RealtimeFeedType.GTFSRT, feedInfo.getRealtimeDataInfo().get(0).getFeedType());
+
+        assertEquals("https://sample-url/mtgtfs/tripupdates.pb", feedInfo.getRealtimeDataInfo().get(0).getFeedURI());
+
+        assertEquals("MT Shuttles GTFS", feedInfo.getTransitDataInfo().get(0).getName());
+
+        assertEquals(false, feedInfo.getTransitDataInfo().get(0).getMerge());
+
 
         // Update Test
-        FeedConfiguration feedConfigurationResult = feedConfigurations.stream().findFirst().get();
+        feedInfoResult.setFeedName("Updated Feed Name 2");
 
-        feedConfigurationResult.setFeedConfigName("Updated Feed Config Name");
+        feedInfoResult.setEnabled(false);
 
-        feedConfigurationService.saveFeedConfiguration(feedConfigurationResult);
+        feedInfoResult.getTransitDataInfo().get(0).setName("Updated MT Shuttles GTFS");
 
-        List<FeedConfiguration> updatedFeedConfigurations = feedConfigurationService.getFeedConfigurations();
+        feedInfoResult.getTransitDataInfo().get(0).setMerge(true);
 
-        FeedConfiguration updatedFeedConfigurationResult = updatedFeedConfigurations.stream().findFirst().get();
+        feedInfoResult.getRealtimeDataInfo().get(0).setFeedURI("http://new");
 
-        assertEquals("Updated Feed Config Name", updatedFeedConfigurationResult.getFeedConfigName());
+        feedInfoService.saveFeedInfo(feedInfoResult);
+
+        FeedInfo updatedFeedInfo = feedInfoService.getFeedInfo(savedFeedInfoId);
+
+        assertEquals("Updated Feed Name 2", updatedFeedInfo.getFeedName());
+
+        assertFalse(updatedFeedInfo.getEnabled());
+
+        assertEquals("Updated MT Shuttles GTFS", updatedFeedInfo.getTransitDataInfo().get(0).getName());
+
+        assertTrue(updatedFeedInfo.getTransitDataInfo().get(0).getMerge());
+
+        assertEquals("http://new", updatedFeedInfo.getRealtimeDataInfo().get(0).getFeedURI());
 
         // Delete Test
-        List<FeedInfo> feedInfo = feedInfoService.getFeedInfos();
+        feedInfoService.deleteFeedInfo(savedFeedInfoId);
 
-        assertEquals(1, feedInfo.size());
+        List<FeedInfo> feedInfos = feedInfoService.getFeedInfos();
 
-        feedConfigurationService.deleteFeedConfiguration(updatedFeedConfigurationResult.getId());
-
-        List<FeedConfiguration> latestFeedConfigurations = feedConfigurationService.getFeedConfigurations();
-
-        assertEquals(0, latestFeedConfigurations.size());
-
-        List<FeedInfo> feedInfoPostDelete = feedInfoService.getFeedInfos();
-
-        assertEquals(0, feedInfoPostDelete.size());
+        assertEquals(1, feedInfoService.getFeedInfos().size());
     }
 }

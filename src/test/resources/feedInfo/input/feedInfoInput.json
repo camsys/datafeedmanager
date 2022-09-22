@@ -6,7 +6,6 @@
   "feedConfigurationId":1,
   "transitDataInfo":[
     {
-      "id":5,
       "name":"MT TripUpdates Feed",
       "description":null,
       "sourceURI":"https://svc.metrotransit.org/mtgtfs/tripupdates.pb",
