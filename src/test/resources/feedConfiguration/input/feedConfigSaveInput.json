@@ -1,0 +1,5 @@
+{
+  "feedConfigName":"configName",
+  "targetDirectory":"/targetDir",
+  "backupDirectory":"/backupDir"
+}
