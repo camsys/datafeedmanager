@@ -1,26 +1,38 @@
 {
+  "id":2,
   "agency":"Minneapolis Metro Transit",
-  "feedName":"Metro Transit 2",
+  "feedName":"Metro Transit",
   "serviceName":"Minnesota Buses",
   "enabled":null,
   "feedConfigurationId":1,
   "transitDataInfo":[
     {
+      "id":5,
       "name":"MT TripUpdates Feed",
       "description":null,
       "sourceURI":"https://svc.metrotransit.org/mtgtfs/tripupdates.pb",
+      "targetName":"mtgtfs.zip",
+      "merge":false
+    },
+    {
+      "id":6,
+      "name":"Transit Data File Feed",
+      "description":"Original Description",
+      "sourceURI":"https://svc.metrotransit.org/mtgtfs/google.zip",
       "targetName":"mtgtfs.zip",
       "merge":false
     }
   ],
   "realtimeDataInfo":[
     {
+      "id":3,
       "name":"MT TripUpdates Feed",
       "description":null,
       "feedURI":"https://svc.metrotransit.org/mtgtfs/tripupdates.pb",
       "feedType":"GTFSRT"
     },
     {
+      "id":4,
       "name":"MT VehiclePositions Feed",
       "description":null,
       "feedURI":"https://svc.metrotransit.org/mtgtfs/vehiclepositions.pb",

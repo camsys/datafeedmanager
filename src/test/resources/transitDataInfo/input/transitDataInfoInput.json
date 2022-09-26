@@ -1,0 +1,7 @@
+{
+  "name":"Transit Data File Feed",
+  "description":"Original Description",
+  "sourceURI":"https://svc.metrotransit.org/mtgtfs/google.zip",
+  "targetName":"mtgtfs.zip",
+  "merge":false
+}

@@ -6,7 +6,9 @@ import com.camsys.datafeedmanager.model.entities.RealtimeDataInfo;
 import com.camsys.datafeedmanager.model.entities.TransitDataInfo;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class FeedInfoMockData {
     public static FeedInfo getFeedInfoSample(){

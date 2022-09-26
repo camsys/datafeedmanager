@@ -1,10 +1,16 @@
 package com.camsys.datafeedmanager;
 
 import com.camsys.datafeedmanager.dto.FeedInfoDto;
+import com.camsys.datafeedmanager.dto.RealtimeDataInfoDto;
+import com.camsys.datafeedmanager.dto.TransitDataInfoDto;
 import com.camsys.datafeedmanager.model.entities.FeedConfiguration;
 import com.camsys.datafeedmanager.model.entities.FeedInfo;
+import com.camsys.datafeedmanager.model.entities.RealtimeDataInfo;
+import com.camsys.datafeedmanager.model.entities.TransitDataInfo;
 import com.camsys.datafeedmanager.service.FeedConfigurationService;
 import com.camsys.datafeedmanager.service.FeedInfoService;
+import com.camsys.datafeedmanager.service.conversion.RealtimeDataInfoDtoConversionService;
+import com.camsys.datafeedmanager.service.conversion.TransitDataInfoDtoConversionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -47,6 +53,12 @@ public class FeedInfoControllerTest {
 
     @Autowired
     private FeedInfoService feedInfoService;
+
+    @Autowired
+    private RealtimeDataInfoDtoConversionService realtimeDataInfoDtoConversionService;
+
+    @Autowired
+    private TransitDataInfoDtoConversionService transitDataInfoDtoConversionService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -162,10 +174,182 @@ public class FeedInfoControllerTest {
 
         String savedFeedInfoId = restTemplate.postForObject(feedInfoUrl + "/save", request, String.class);
 
-        Assert.assertEquals(2, feedConfigurationService.getFeedConfiguration(1l).getFeedInfo().size());
+        Assert.assertEquals(2, feedConfigurationService.getFeedConfiguration(feedConfigId).getFeedInfo().size());
 
         String expectedGetOutput = getResourceAsString("feedInfo/output/expectedFeedInfoSaveOutput.json");
         String actualGetOutput = restTemplate.getForObject(feedInfoUrl + "/" + savedFeedInfoId, String.class);
+
+        JSONAssert.assertEquals(expectedGetOutput, actualGetOutput, false);
+    }
+
+    @Test
+    public void realTimeDataInfoSaveGetTest() throws Exception {
+        String feedInfoUrl = host + ":" + port + path;
+
+        // Setting up FeedConfiguration Data Prereq
+        Long feedConfigId = feedConfigurationService.saveFeedConfiguration(getFeedConfigurationSample());
+
+        FeedConfiguration feedConfigurationPreUpdate = feedConfigurationService.getFeedConfiguration(feedConfigId);
+
+        FeedInfo feedInfoPreUpdate = feedConfigurationPreUpdate.getFeedInfo().stream().findFirst().get();
+
+        Long feedInfoId = feedInfoPreUpdate.getId();
+
+        Assert.assertEquals(2, feedInfoPreUpdate.getRealtimeDataInfo().size());
+
+        String realtimeDataInfoInput = getResourceAsString("realtimeDataInfo/input/realtimeDataInfoInput.json");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> request = new HttpEntity<>(realtimeDataInfoInput, headers);
+
+        restTemplate.postForObject(feedInfoUrl + "/" + feedInfoId + "/realtime-data/save", request, String.class);
+
+        FeedConfiguration feedConfigurationPostSave = feedConfigurationService.getFeedConfiguration(feedConfigId);
+
+        FeedInfo feedInfoPostSave = feedConfigurationPostSave.getFeedInfo().stream().findFirst().get();
+
+        Assert.assertEquals(3, feedInfoPostSave.getRealtimeDataInfo().size());
+
+        String expectedGetOutput = getResourceAsString("realtimeDataInfo/output/expectedRealtimeDataInfoSaveOutput.json");
+
+        String actualGetOutput = restTemplate.getForObject(feedInfoUrl + "/" + feedInfoId, String.class);
+
+        JSONAssert.assertEquals(expectedGetOutput, actualGetOutput, false);
+    }
+
+    @Test
+    public void realTimeDataInfoUpdateGetTest() throws Exception {
+        String feedInfoUrl = host + ":" + port + path;
+
+        // Setting up FeedConfiguration Data Prereq
+        Long feedConfigId = feedConfigurationService.saveFeedConfiguration(getFeedConfigurationSample());
+
+        FeedConfiguration feedConfigurationPreSave = feedConfigurationService.getFeedConfiguration(feedConfigId);
+
+        FeedInfo feedInfoPreSave = feedConfigurationPreSave.getFeedInfo().stream().findFirst().get();
+
+        Long feedInfoId = feedInfoPreSave.getId();
+
+        Assert.assertEquals(2, feedInfoPreSave.getRealtimeDataInfo().size());
+
+        RealtimeDataInfo realtimeDataInfo = feedInfoPreSave.getRealtimeDataInfo().stream().findFirst().get();
+
+        RealtimeDataInfoDto realtimeDataInfoDto = realtimeDataInfoDtoConversionService.convertToDto(realtimeDataInfo);
+
+        realtimeDataInfoDto.setName("MT TripUpdates Feed Updated");
+
+        realtimeDataInfoDto.setDescription("Updated Description");
+
+        realtimeDataInfoDto.setFeedURI("https://updated-url/mtgtfs/tripupdates.pb");
+
+        String realtimeDataInfoInput = objectMapper.writeValueAsString(realtimeDataInfoDto);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> request = new HttpEntity<>(realtimeDataInfoInput, headers);
+
+        restTemplate.postForObject(feedInfoUrl + "/" + feedInfoId + "/realtime-data/save", request, String.class);
+
+        FeedConfiguration feedConfigurationPostSave = feedConfigurationService.getFeedConfiguration(feedConfigId);
+
+        FeedInfo feedInfoPostSave = feedConfigurationPostSave.getFeedInfo().stream().findFirst().get();
+
+        Assert.assertEquals(2, feedInfoPostSave.getRealtimeDataInfo().size());
+
+        String expectedGetOutput = getResourceAsString("realtimeDataInfo/output/expectedRealtimeDataInfoUpdateOutput.json");
+
+        String actualGetOutput = restTemplate.getForObject(feedInfoUrl + "/" + feedInfoId, String.class);
+
+        JSONAssert.assertEquals(expectedGetOutput, actualGetOutput, false);
+    }
+
+    @Test
+    public void transitDataInfoSaveGetTest() throws Exception {
+        String feedInfoUrl = host + ":" + port + path;
+
+        // Setting up FeedConfiguration Data Prereq
+        Long feedConfigId = feedConfigurationService.saveFeedConfiguration(getFeedConfigurationSample());
+
+        FeedConfiguration feedConfigurationPreUpdate = feedConfigurationService.getFeedConfiguration(feedConfigId);
+
+        FeedInfo feedInfoPreUpdate = feedConfigurationPreUpdate.getFeedInfo().stream().findFirst().get();
+
+        Long feedInfoId = feedInfoPreUpdate.getId();
+
+        Assert.assertEquals(1, feedInfoPreUpdate.getTransitDataInfo().size());
+
+        String transitDataInfoInput = getResourceAsString("transitDataInfo/input/transitDataInfoInput.json");
+
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> request = new HttpEntity<>(transitDataInfoInput, headers);
+
+        restTemplate.postForObject(feedInfoUrl + "/" + feedInfoId + "/transit-data/save", request, String.class);
+
+        FeedConfiguration feedConfigurationPostSave = feedConfigurationService.getFeedConfiguration(feedConfigId);
+
+        FeedInfo feedInfoPostSave = feedConfigurationPostSave.getFeedInfo().stream().findFirst().get();
+
+        Assert.assertEquals(2, feedInfoPostSave.getTransitDataInfo().size());
+
+        String expectedGetOutput = getResourceAsString("transitDataInfo/output/expectedTransitDataInfoSaveOutput.json");
+
+        String actualGetOutput = restTemplate.getForObject(feedInfoUrl + "/" + feedInfoId, String.class);
+
+        JSONAssert.assertEquals(expectedGetOutput, actualGetOutput, false);
+    }
+
+    @Test
+    public void transitTimeDataInfoUpdateGetTest() throws Exception {
+        String feedInfoUrl = host + ":" + port + path;
+
+        // Setting up FeedConfiguration Data Prereq
+        Long feedConfigId = feedConfigurationService.saveFeedConfiguration(getFeedConfigurationSample());
+
+        FeedConfiguration feedConfigurationPreSave = feedConfigurationService.getFeedConfiguration(feedConfigId);
+
+        FeedInfo feedInfoPreSave = feedConfigurationPreSave.getFeedInfo().stream().findFirst().get();
+
+        Long feedInfoId = feedInfoPreSave.getId();
+
+        Assert.assertEquals(1, feedInfoPreSave.getTransitDataInfo().size());
+
+        TransitDataInfo transitDataInfo = feedInfoPreSave.getTransitDataInfo().stream().findFirst().get();
+
+        TransitDataInfoDto transitDataInfoDto = transitDataInfoDtoConversionService.convertToDto(transitDataInfo);
+
+        transitDataInfoDto.setName("Transit Data File Feed Update");
+
+        transitDataInfoDto.setDescription("Updated Description");
+
+        transitDataInfoDto.setSourceURI("https://svc.metrotransit.org/mtgtfs/googleUpdated.zip");
+
+        transitDataInfoDto.setTargetName("mtgtfs_updated.zip");
+
+        transitDataInfoDto.setMerge(false);
+
+        String transitDataInfoInput = objectMapper.writeValueAsString(transitDataInfoDto);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> request = new HttpEntity<>(transitDataInfoInput, headers);
+
+        restTemplate.postForObject(feedInfoUrl + "/" + feedInfoId + "/transit-data/save", request, String.class);
+
+        FeedConfiguration feedConfigurationPostSave = feedConfigurationService.getFeedConfiguration(feedConfigId);
+
+        FeedInfo feedInfoPostSave = feedConfigurationPostSave.getFeedInfo().stream().findFirst().get();
+
+        Assert.assertEquals(1, feedInfoPostSave.getTransitDataInfo().size());
+
+        String expectedGetOutput = getResourceAsString("transitDataInfo/output/expectedTransitDataInfoUpdateOutput.json");
+
+        String actualGetOutput = restTemplate.getForObject(feedInfoUrl + "/" + feedInfoId, String.class);
 
         JSONAssert.assertEquals(expectedGetOutput, actualGetOutput, false);
     }

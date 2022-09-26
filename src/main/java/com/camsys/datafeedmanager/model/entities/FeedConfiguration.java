@@ -1,26 +1,26 @@
 package com.camsys.datafeedmanager.model.entities;
 
 import javax.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.*;
+
+import java.util.*;
+import java.util.Set;
 
 @Entity
 @Table
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class FeedConfiguration {
 
     @Id
     @GeneratedValue
+    @EqualsAndHashCode.Exclude
     private Long id;
 
-    @Column
+    @Column(unique=true)
     private String feedConfigName;
 
     @Column
@@ -32,16 +32,11 @@ public class FeedConfiguration {
     @OneToMany(cascade=CascadeType.PERSIST, orphanRemoval = true, mappedBy = "feedConfiguration", fetch = FetchType.EAGER)
     private List<FeedInfo> feedInfo = new ArrayList<>();
 
-    /*@PreRemove
-    private void removeFeedInfoFromConfiguration() {
-        feedInfo.getFeedInfo().remove(this);
-    }*/
-
     public void addFeedInfo(FeedInfo feedInfo){
         this.feedInfo.add(feedInfo);
     }
 
-    public void addFeedInfo(List<FeedInfo> feedInfo){
+    public void addFeedInfo(Set<FeedInfo> feedInfo){
         this.feedInfo.addAll(feedInfo);
     }
 
@@ -49,7 +44,7 @@ public class FeedConfiguration {
         this.feedInfo.remove(feedInfo);
     }
 
-    public void removeFeedInfo(List<FeedInfo> feedInfo){
+    public void removeFeedInfo(Set<FeedInfo> feedInfo){
         this.feedInfo.removeAll(feedInfo);
     }
 }

@@ -7,6 +7,8 @@ import com.camsys.datafeedmanager.model.entities.RealtimeDataInfo;
 import com.camsys.datafeedmanager.model.entities.TransitDataInfo;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.List;
 
 public class FeedConfigMockData {

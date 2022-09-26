@@ -1,0 +1,6 @@
+{
+  "name": "Realtime Data Input",
+  "description": "Description for Realtime Data Input",
+  "feedURI": "https://realtimedata/mtgtfs/tripupdates.pb",
+  "feedType": "GTFSRT"
+}

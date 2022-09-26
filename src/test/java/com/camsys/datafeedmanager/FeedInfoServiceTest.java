@@ -68,13 +68,13 @@ public class FeedInfoServiceTest {
 
         assertEquals(true, feedInfo.getEnabled());
 
-        assertEquals(RealtimeFeedType.GTFSRT, feedInfo.getRealtimeDataInfo().get(0).getFeedType());
+        assertEquals(RealtimeFeedType.GTFSRT, feedInfo.getRealtimeDataInfo().stream().findFirst().get().getFeedType());
 
-        assertEquals("https://sample-url/mtgtfs/tripupdates.pb", feedInfo.getRealtimeDataInfo().get(0).getFeedURI());
+        assertEquals("https://sample-url/mtgtfs/tripupdates.pb", feedInfo.getRealtimeDataInfo().stream().findFirst().get().getFeedURI());
 
-        assertEquals("MT Shuttles GTFS", feedInfo.getTransitDataInfo().get(0).getName());
+        assertEquals("MT Shuttles GTFS", feedInfo.getTransitDataInfo().stream().findFirst().get().getName());
 
-        assertEquals(false, feedInfo.getTransitDataInfo().get(0).getMerge());
+        assertEquals(false, feedInfo.getTransitDataInfo().stream().findFirst().get().getMerge());
 
 
         // Update Test
@@ -82,11 +82,11 @@ public class FeedInfoServiceTest {
 
         feedInfoResult.setEnabled(false);
 
-        feedInfoResult.getTransitDataInfo().get(0).setName("Updated MT Shuttles GTFS");
+        feedInfoResult.getTransitDataInfo().stream().findFirst().get().setName("Updated MT Shuttles GTFS");
 
-        feedInfoResult.getTransitDataInfo().get(0).setMerge(true);
+        feedInfoResult.getTransitDataInfo().stream().findFirst().get().setMerge(true);
 
-        feedInfoResult.getRealtimeDataInfo().get(0).setFeedURI("http://new");
+        feedInfoResult.getRealtimeDataInfo().stream().findFirst().get().setFeedURI("http://new");
 
         feedInfoService.saveFeedInfo(feedInfoResult);
 
@@ -96,11 +96,11 @@ public class FeedInfoServiceTest {
 
         assertFalse(updatedFeedInfo.getEnabled());
 
-        assertEquals("Updated MT Shuttles GTFS", updatedFeedInfo.getTransitDataInfo().get(0).getName());
+        assertEquals("Updated MT Shuttles GTFS", updatedFeedInfo.getTransitDataInfo().stream().findFirst().get().getName());
 
-        assertTrue(updatedFeedInfo.getTransitDataInfo().get(0).getMerge());
+        assertTrue(updatedFeedInfo.getTransitDataInfo().stream().findFirst().get().getMerge());
 
-        assertEquals("http://new", updatedFeedInfo.getRealtimeDataInfo().get(0).getFeedURI());
+        assertEquals("http://new", updatedFeedInfo.getRealtimeDataInfo().stream().findFirst().get().getFeedURI());
 
         // Delete Test
         feedInfoService.deleteFeedInfo(savedFeedInfoId);

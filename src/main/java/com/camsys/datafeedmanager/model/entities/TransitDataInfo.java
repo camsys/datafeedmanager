@@ -1,23 +1,25 @@
 package com.camsys.datafeedmanager.model.entities;
 
 import javax.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
 
 @Entity
-@Table
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
+@Table(uniqueConstraints = {
+    @UniqueConstraint(name = "UniqueTransitDataNameAndFeedInfo", columnNames = { "name", "fk_FeedInfoId" })
+})
 public class TransitDataInfo {
 
     @Id
     @GeneratedValue
+    @EqualsAndHashCode.Exclude
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private String name;
 
     @Column
@@ -32,6 +34,7 @@ public class TransitDataInfo {
     @Column
     private Boolean merge;
 
+    @EqualsAndHashCode.Exclude
     @ManyToOne
     @JoinColumn(name="fk_FeedInfoId")
     private FeedInfo feedInfo;
