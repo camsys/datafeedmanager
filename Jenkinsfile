@@ -79,5 +79,13 @@ pipeline {
         }
     }
 
-    post {}
+    post {
+            always {
+                withCredentials([string(credentialsId: 'AWS_MNDOT_DATAFEEDMANAGER_REPOSITORY_URL_SECRET', variable: 'AWS_ECR_URL')]) {
+                    junit allowEmptyResults: true, testResults: 'target/surfire-reports/*.xml'
+                    deleteDir()
+                    sh "docker rmi ${AWS_ECR_URL}:${POM_VERSION}"
+                }
+            }
+    }
 }
