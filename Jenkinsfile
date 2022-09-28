@@ -17,7 +17,7 @@ pipeline {
 	}
 
     environment {
-        //POM_VERSION = getVersion()
+        POM_VERSION = getVersion()
         JAR_NAME = getJarName()
         AWS_ECS_COMPATIBILITY = 'FARGATE'
         AWS_ECS_NETWORK_MODE = 'awsvpc'
