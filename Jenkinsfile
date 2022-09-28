@@ -17,7 +17,7 @@ pipeline {
 	}
 
     environment {
-        POM_VERSION = getVersion()
+        //POM_VERSION = getVersion()
         JAR_NAME = getJarName()
         AWS_ECS_COMPATIBILITY = 'FARGATE'
         AWS_ECS_NETWORK_MODE = 'awsvpc'
@@ -82,9 +82,9 @@ pipeline {
     post {
             always {
                 withCredentials([string(credentialsId: 'AWS_MNDOT_DATAFEEDMANAGER_REPOSITORY_URL_SECRET', variable: 'AWS_ECR_URL')]) {
-                    junit allowEmptyResults: true, testResults: 'target/surfire-reports/*.xml'
+                    //junit allowEmptyResults: true, testResults: 'target/surfire-reports/*.xml'
                     deleteDir()
-                    sh "docker rmi ${AWS_ECR_URL}:${POM_VERSION}"
+                    //sh "docker rmi ${AWS_ECR_URL}:${POM_VERSION}"
                 }
             }
     }
