@@ -52,6 +52,7 @@ pipeline {
 			  withAWS(region: "${AWS_ECR_REGION}", credentials: 'MNDOT-ECR-AWS-CREDENTIALS') {
 				script {
 				  def login = ecrLogin()
+				  sh('/usr/local/bin/aws ecs list-clusters --region ${AWS_ECR_REGION}')
 				  sh('#!/bin/sh -e\n' + "${login}") // hide logging
 				  docker.image("${AWS_ECR_URL}:${POM_VERSION}").push()
 				}
@@ -72,6 +73,7 @@ pipeline {
                 updateContainerDefinitionJsonWithImageVersion()
                 sh("/usr/local/bin/aws ecs register-task-definition --region ${AWS_ECR_REGION} --family ${AWS_ECS_TASK_DEFINITION} --execution-role-arn ${AWS_ECS_EXECUTION_ROLE} --requires-compatibilities ${AWS_ECS_COMPATIBILITY} --network-mode ${AWS_ECS_NETWORK_MODE} --cpu ${AWS_ECS_CPU} --memory ${AWS_ECS_MEMORY} --container-definitions file://${AWS_ECS_TASK_DEFINITION_PATH}")
                 def taskRevision = sh(script: "/usr/local/bin/aws ecs describe-task-definition --task-definition ${AWS_ECS_TASK_DEFINITION} | egrep \"revision\" | tr \"/\" \" \" | awk '{print \$2}' | sed 's/\"\$//'", returnStdout: true)
+                sh('/usr/local/bin/aws ecs list-clusters --region ${AWS_ECR_REGION}')
                 sh("/usr/local/bin/aws ecs update-service --cluster mndot-dev --service ${AWS_ECS_SERVICE} --task-definition ${AWS_ECS_TASK_DEFINITION}")
               }
             }
