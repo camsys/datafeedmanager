@@ -67,10 +67,13 @@ pipeline {
                 string(credentialsId: 'AWS_MNDOT_DATAFEEDMANAGER_CLUSTER_SECRET', variable: 'AWS_ECS_CLUSTER'),
                 string(credentialsId: 'AWS_MNDOT_DATAFEEDMANAGER_TASK_DEFINITION_SECRET', variable: 'AWS_ECS_TASK_DEFINITION'),
                 string(credentialsId: 'AWS_MNDOT_DATAFEEDMANAGER_SERVICE_SECRET', variable: 'AWS_ECS_SERVICE'),
+                string(credentialsId: 'AWS_MNDOT_DATAFEEDMANAGER_DB_URL', variable: 'AWS_DATASOURCE_URL'),
+                string(credentialsId: 'AWS_MNDOT_DATAFEEDMANAGER_DB_USERNAME', variable: 'AWS_DATASOURCE_USERNAME'),
+                string(credentialsId: 'AWS_MNDOT_DATAFEEDMANAGER_DB_PASSWORD', variable: 'AWS_DATASOURCE_PASSWORD'),
                 string(credentialsId: 'AWS_MNDOT_ECR_REGION', variable: 'AWS_ECR_REGION')]) {
                 withAWS(region: "${AWS_ECR_REGION}", credentials: 'MNDOT-ECR-AWS-CREDENTIALS') {
                     script {
-                        updateContainerDefinitionJsonWithImageVersion()
+                        updateContainerDefinitionJson()
                         sh("/usr/local/bin/aws ecs register-task-definition --region ${AWS_ECR_REGION} --family ${AWS_ECS_TASK_DEFINITION} --execution-role-arn ${AWS_ECS_EXECUTION_ROLE} --requires-compatibilities ${AWS_ECS_COMPATIBILITY} --network-mode ${AWS_ECS_NETWORK_MODE} --cpu ${AWS_ECS_CPU} --memory ${AWS_ECS_MEMORY} --container-definitions file://${AWS_ECS_TASK_DEFINITION_PATH}")
                         def taskRevision = sh(script: "/usr/local/bin/aws ecs describe-task-definition --task-definition ${AWS_ECS_TASK_DEFINITION} | egrep \"revision\" | tr \"/\" \" \" | awk '{print \$2}' | sed 's/\"\$//'", returnStdout: true)
                         sh("/usr/local/bin/aws ecs update-service --cluster ${AWS_ECS_CLUSTER} --service ${AWS_ECS_SERVICE} --task-definition ${AWS_ECS_TASK_DEFINITION}")
@@ -108,9 +111,20 @@ def getName() {
     return pom.name
 }
 
-def updateContainerDefinitionJsonWithImageVersion() {
+def updateContainerDefinitionJson() {
     def containerDefinitionJson = readJSON file: AWS_ECS_TASK_DEFINITION_PATH, returnPojo: true
     containerDefinitionJson[0]['image'] = "${AWS_ECR_URL}:${POM_VERSION}".inspect()
+    for(secret : containerDefinitionJson[0]['secrets']){
+        if(secret['name'].equals("SPRING_DATASOURCE_URL")){
+            secret['valueFrom'] = "${AWS_DATASOURCE_URL}".inspect()
+        }
+        if(secret['name'].equals("SPRING_DATASOURCE_USERNAME")){
+            secret['valueFrom'] = "${AWS_DATASOURCE_USERNAME}".inspect()
+        }
+        if(secret['name'].equals("SPRING_DATASOURCE_PASSWORD")){
+            secret['valueFrom'] = "${AWS_DATASOURCE_PASSWORD}".inspect()
+        }
+    }
     echo "task definiton json: ${containerDefinitionJson}"
     writeJSON file: AWS_ECS_TASK_DEFINITION_PATH, json: containerDefinitionJson
 }
