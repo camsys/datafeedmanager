@@ -114,7 +114,7 @@ def getName() {
 def updateContainerDefinitionJson() {
     def containerDefinitionJson = readJSON file: AWS_ECS_TASK_DEFINITION_PATH, returnPojo: true
     containerDefinitionJson[0]['image'] = "${AWS_ECR_URL}:${POM_VERSION}".inspect()
-    for(secret : containerDefinitionJson[0]['secrets']){
+    for(secret in containerDefinitionJson[0]['secrets']){
         if(secret['name'].equals("SPRING_DATASOURCE_URL")){
             secret['valueFrom'] = "${AWS_DATASOURCE_URL}".inspect()
         }
